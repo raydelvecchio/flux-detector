@@ -33,5 +33,5 @@ I suspect that this result is because the images are 32x32. The inversion and sa
 Ideally, we test this on some semi-SOTA realistic image models, not just CIFAKE. So this is what we do!
 
 ### Dataset Generation
-I created my own dataset for this! Two classes (AI generated vs real) of women speaking on stage (inspired by that original [viral image](https://x.com/AngryTomtweets/status/1822203767728591350)). The real ones are scraped from Google Images, and
+I created my own dataset for this! Two classes (AI generated vs real) of women speaking on stage (inspired by that original [viral image](https://x.com/AngryTomtweets/status/1822203767728591350)). In retrospect, I probably should have picked something that would be more consistent between Flux's generation and google images. Oh well. The real ones are scraped from Google Images, and
 the AI generated ones use [Replicate's FLUX Schneill](https://replicate.com/black-forest-labs/flux-schnell) model. The AI generated images were randomly seeded with a base prompt and some randomly selected modifier for a broader distribution. Yes, I know it's not the SOTA one for realize, but we're working efficiently with CNNs here. Give me a break. But yes, we should be using the most real, and I would if it wasn't like $0.03 a generation request.

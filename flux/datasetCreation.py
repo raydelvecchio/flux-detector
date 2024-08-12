@@ -6,8 +6,15 @@ import requests
 import time
 import urllib.parse
 import os
+import replicate
+import os
+import requests
+from tqdm import tqdm
+import random
+import dotenv
+dotenv.load_dotenv('../.env')
 
-def download_images(query, limit, output_directory):
+def download_images_from_google(query, limit, output_directory):
     driver = webdriver.Chrome()
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
@@ -70,5 +77,57 @@ def download_images(query, limit, output_directory):
     print(f"\nDownload process completed. Total images downloaded: {count}")
     driver.quit()
 
+def save_replicate_output(output, folder="replicate_flux"):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    
+    for url in output:
+        response = requests.get(url)
+        if response.status_code == 200:
+            filename = f"{folder}/{os.urandom(8).hex()}.jpg"
+            with open(filename, "wb") as f:
+                f.write(response.content)
+            print(f"Saved {filename}")
+        else:
+            print(f"Failed to download image from {url}")
+
+def generate_and_save_image(base_prompt: str, descriptors: list[str]):
+    selected_descriptors = random.sample(descriptors, 2)
+    full_prompt = f"{base_prompt}, {', '.join(selected_descriptors)}"
+
+    output = replicate.run(
+        "black-forest-labs/flux-schnell",
+        input={
+            "prompt": full_prompt,
+            "num_outputs": 1,
+            "aspect_ratio": "16:9",
+            "output_format": "jpg",
+            "output_quality": 100
+        }
+    )
+    save_replicate_output(output)
+    return output
+
 if __name__ == "__main__":
-    download_images(query="woman presenting on stage", limit=1000, output_directory="google_images")
+    # download_images(query="woman presenting on stage", limit=1000, output_directory="google_images")
+
+    base_prompt = "woman presenting on stage"
+    descriptors = [
+        "close-up shot",
+        "wide angle view",
+        "from the audience perspective",
+        "side view",
+        "with a panel of experts",
+        "holding a microphone",
+        "gesturing with hands",
+        "in front of a large screen",
+        "with audience visible",
+        "under dramatic lighting",
+        "wearing a business suit",
+        "with a confident pose",
+        "mid-speech",
+        "answering questions",
+        "walking across the stage"
+    ]
+    # for _ in tqdm(range(1000), desc="Generating images"):
+    #     generate_and_save_image(base_prompt, descriptors)
