@@ -22,10 +22,12 @@ your username and key, then place it in `/Users/<USERNAME>/.kaggle` (if on UNIX)
 ### Results
 Here's the accuracy results for the standard CNN vs Inverted / Saturated CNN:
 
-* Non-Augmented:
-    * 0.9401 Test Accuracy
-* Augmented:
-    * 0.7667 Test Accuracy
+* Params:
+    * Current params in the model; don't see myself changing or updating soon
+    * Batch size 32
+    * 5 Epochs
+* Non-Augmented Test Accuracy: 0.9401
+* Augmented Test Accuracy: 0.7667
 
 I suspect that this result is because the images are 32x32. The inversion and saturation are only obviously visibile in high resolution imagery.
 
@@ -35,3 +37,22 @@ Ideally, we test this on some semi-SOTA realistic image models, not just CIFAKE.
 ### Dataset Generation
 I created my own dataset for this! Two classes (AI generated vs real) of women speaking on stage (inspired by that original [viral image](https://x.com/AngryTomtweets/status/1822203767728591350)). In retrospect, I probably should have picked something that would be more consistent between Flux's generation and google images. Oh well. The real ones are scraped from Google Images, and
 the AI generated ones use [Replicate's FLUX Schneill](https://replicate.com/black-forest-labs/flux-schnell) model. The AI generated images were randomly seeded with a base prompt and some randomly selected modifier for a broader distribution. Yes, I know it's not the SOTA one for realize, but we're working efficiently with CNNs here. Give me a break. But yes, we should be using the most real, and I would if it wasn't like $0.03 a generation request.
+
+### Results
+Splitting up results here by time so I can refine this process over time!
+* 12:30 AM Aug 12 2024:
+    * Params:
+        * 16 Batch Size
+        * 5 Epochs
+    * Non-Augmented Test Accuracy:
+        * Epoch 1 Val Accuracy: 0.5789
+        * Epoch 2 Val Accuracy: 0.6842
+        * Epoch 3 Val Accuracy: 0.7632
+        * Epoch 4 Val Accuracy: 0.8053
+        * Epoch 5 Val Accuracy: 
+    * Augmented Test Accuracy:
+        * Epoch 1 Val Accuracy:
+        * Epoch 2 Val Accuracy:
+        * Epoch 3 Val Accuracy:
+        * Epoch 4 Val Accuracy:
+        * Epoch 5 Val Accuracy: 
