@@ -198,6 +198,8 @@ def get_resolution_counts():
                         resolution_counts[resolution] = resolution_counts.get(resolution, 0) + 1
                     else:
                         print(f"Failed to read image: {img_path}")
+                        os.remove(img_path)
+                        print(f"Deleted image: {img_path}")
                 except Exception as e:
                     print(f"Error processing {img_path}: {e}")
 

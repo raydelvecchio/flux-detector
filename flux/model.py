@@ -12,25 +12,35 @@ class FakeDetectorCNN(nn.Module):
         self.name = name
         
         self.conv = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            nn.Conv2d(3, 32, kernel_size=7, padding=3, stride=2),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(32, 64, kernel_size=5, padding=2),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2)
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool2d((1, 1))
         )
+        
+        # calculate size of the flattened feature map using the image height and
+        self.feature_size = self._get_conv_output_size((3, Constants.IMG_HEIGHT, Constants.IMG_WIDTH))
+        
         self.fc = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(128 * 4 * 4, 256),
+            nn.Linear(self.feature_size, 1024),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(256, 64),
+            nn.Linear(1024, 256),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(64, 1),
+            nn.Linear(256, 1),
             nn.Sigmoid()
         )
         
@@ -38,6 +48,13 @@ class FakeDetectorCNN(nn.Module):
         self.optimizer = optim.Adam(self.parameters())
         self.to(self.device)
         self.print_architecture()
+
+    def _get_conv_output_size(self, shape):
+        batch_size = 1
+        input = torch.autograd.Variable(torch.rand(batch_size, *shape))
+        output_feat = self.conv(input)
+        n_size = output_feat.data.view(batch_size, -1).size(1)
+        return n_size
 
     def print_architecture(self):
         print(f"Architecture of {self.name}:")
@@ -49,6 +66,7 @@ class FakeDetectorCNN(nn.Module):
         print(f"Device: {self.device}")
         print(f"Loss Function: {self.criterion.__class__.__name__}")
         print(f"Optimizer: {self.optimizer.__class__.__name__}")
+        print(f"Flattened feature size: {self.feature_size}")
 
     def forward(self, x):
         if self.invert_and_saturate:
