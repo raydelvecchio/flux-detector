@@ -40,19 +40,65 @@ the AI generated ones use [Replicate's FLUX Schneill](https://replicate.com/blac
 
 ### Results
 Splitting up results here by time so I can refine this process over time!
-* 12:30 AM Aug 12 2024:
+
+* 12:10 AM Aug 12 2024:
     * Params:
+        * Model Architecture:
+            ``` 
+            FakeDetectorCNN(
+            (conv): Sequential(
+                (0): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(3, 3))
+                (1): ReLU()
+                (2): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+                (3): Conv2d(32, 64, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
+                (4): ReLU()
+                (5): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+                (6): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+                (7): ReLU()
+                (8): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+                (9): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+                (10): ReLU()
+                (11): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+                (12): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+                (13): ReLU()
+                (14): AdaptiveAvgPool2d(output_size=(1, 1))
+            )
+            (fc): Sequential(
+                (0): Flatten(start_dim=1, end_dim=-1)
+                (1): Linear(in_features=512, out_features=1024, bias=True)
+                (2): ReLU()
+                (3): Dropout(p=0.5, inplace=False)
+                (4): Linear(in_features=1024, out_features=256, bias=True)
+                (5): ReLU()
+                (6): Dropout(p=0.5, inplace=False)
+                (7): Linear(in_features=256, out_features=1, bias=True)
+                (8): Sigmoid()
+            )
+            (criterion): BCELoss()
+            )
+            ```
         * 16 Batch Size
         * 5 Epochs
-    * Non-Augmented Test Accuracy:
+        * 500x Saturation Factor
+    * Non-Augmented Test Accuracy: 0.8032
         * Epoch 1 Val Accuracy: 0.5789
         * Epoch 2 Val Accuracy: 0.6842
         * Epoch 3 Val Accuracy: 0.7632
         * Epoch 4 Val Accuracy: 0.8053
-        * Epoch 5 Val Accuracy: 
+        * Epoch 5 Val Accuracy: 0.8105
+    * Augmented Test Accuracy: didn't get that far
+        * Epoch 1 Val Accuracy: 0.5421
+        * Epoch 2 Val Accuracy: 0.5947
+* 12:45 AM Aug 12 2024:
+    * Params:
+        * Same architecture as above
+        * 16 Batch Size
+        * 5 Epochs
+        * 8x Saturation Factor
     * Augmented Test Accuracy:
         * Epoch 1 Val Accuracy:
-        * Epoch 2 Val Accuracy:
-        * Epoch 3 Val Accuracy:
-        * Epoch 4 Val Accuracy:
-        * Epoch 5 Val Accuracy: 
+
+# TODOs
+1. Collect more imagery, or imagery of more homogenous things
+2. Print or display what a high saturation image looks like during training
+3. Fuck with hyperparameters

@@ -3,6 +3,11 @@ import torch.nn as nn
 import torch.optim as optim
 from constants import Constants
 import torchvision.transforms.functional as TF
+import time
+from PIL import Image
+import os
+import numpy as np
+import random
 
 class FakeDetectorCNN(nn.Module):
     def __init__(self, invert_and_saturate: bool, name: str = "FakeDetectorCNN"):
@@ -10,9 +15,10 @@ class FakeDetectorCNN(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.invert_and_saturate = invert_and_saturate
         self.name = name
+        self.training = False
         
         self.conv = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, padding=3, stride=2),
+            nn.Conv2d(3, 32, kernel_size=7, padding=3, stride=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             nn.Conv2d(32, 64, kernel_size=5, padding=2),
@@ -47,6 +53,8 @@ class FakeDetectorCNN(nn.Module):
         self.criterion = nn.BCELoss()
         self.lr = 1e-3
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        self.saturation_factor = 8
+
         self.to(self.device)
         self.print_architecture()
 
@@ -70,15 +78,44 @@ class FakeDetectorCNN(nn.Module):
         print(f"Flattened feature size: {self.feature_size}")
 
     def forward(self, x):
+        original_x = x.clone()
+        
         if self.invert_and_saturate:
             x = 1 - x  # invert the colors of the image
-            x = TF.adjust_saturation(x, 500)  # maximize the saturation of the image
+            x = TF.adjust_saturation(x, self.saturation_factor)  # maximize the saturation of the image
+
+        if self.training and random.random() <= 0.02:  # 2% chance of saving a sample
+            os.makedirs('training_samples', exist_ok=True)
+            
+            # get class prediction
+            with torch.no_grad():
+                class_pred = self.fc(self.conv(x[0].unsqueeze(0).to(self.device)))
+            class_label = "FAKE" if class_pred.item() > 0.5 else "REAL"
+            
+            # save processed image (inverted and saturated if applicable)
+            processed_img = x[0].cpu().detach().permute(1, 2, 0).numpy()
+            processed_img = (processed_img * 255).astype(np.uint8)
+            processed_img = Image.fromarray(processed_img)
+            timestamp = time.time()
+            processed_filename = f'training_samples/processed_{class_label}_sf{self.saturation_factor}_{timestamp}.png'
+            processed_img.save(processed_filename)
+            print(f"Saved processed image sample: {processed_filename}")
+            
+            # save the original
+            orig_img = original_x[0].cpu().detach().permute(1, 2, 0).numpy()
+            orig_img = (orig_img * 255).astype(np.uint8)
+            orig_img = Image.fromarray(orig_img)
+            orig_filename = f'training_samples/original_{class_label}_{timestamp}.png'
+            orig_img.save(orig_filename)
+            print(f"Saved original image sample: {orig_filename}")
+
         x = self.conv(x)
         x = self.fc(x)
         return x
 
     def train_model(self, train_loader, val_loader):
         print(f"Starting training for {self.name}...")
+        self.training = True
         for epoch in range(Constants.EPOCHS):
             self.train()
             train_loss = 0
@@ -119,6 +156,7 @@ class FakeDetectorCNN(nn.Module):
             print(f"{self.name} - Train Loss: {train_loss/len(train_loader):.4f}, Train Accuracy: {train_correct/train_total:.4f}")
             print(f"{self.name} - Val Loss: {val_loss/len(val_loader):.4f}, Val Accuracy: {val_correct/val_total:.4f}")
 
+        self.training = False
         print(f"Training finished for {self.name}.")
 
     def test_model(self, test_loader):
