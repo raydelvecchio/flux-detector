@@ -1,0 +1,8 @@
+opencv-python
+numpy
+kaggle
+python-dotenv
+torch
+torchvision
+selenium
+replicate
