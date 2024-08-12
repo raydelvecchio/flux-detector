@@ -95,8 +95,21 @@ Splitting up results here by time so I can refine this process over time!
         * 16 Batch Size
         * 5 Epochs
         * 8x Saturation Factor
-    * Augmented Test Accuracy:
-        * Epoch 1 Val Accuracy:
+    * Augmented Test Accuracy: 0.8085
+        * Epoch 1 Val Accuracy: 0.4579
+        * Epoch 2 Val Accuracy: 0.5421
+        * Epoch 3 Val Accuracy: 0.6263
+        * Epoch 4 Val Accuracy: 0.7632
+        * Epoch 5 Val Accuracy: 0.7737
+    
+### Conclusions
+* It appears that both techniques, through many epochs, are about the same
+* I wonder how much of this success is overfitting
+* It seems that the augmentations, over many epochs, improve faster than non-augmentations
+* Qualitatively, looking at the training samples, the high saturation rate seems to "hide" imperfections in the AI generated imagery
+    * This could, in the beginning, make it harder to identify fake vs not fake, contributing to early low accuracy
+    * But then, later on, with more epochs or a powerful enough model, this forces the model to look at the inverse / saturation / other artifacts to make a decision perhaps? Which means it could be more effective?
+* I think that more data, or more homogenous data, is required to actually draw a conclusion from this!
 
 # TODOs
 1. Collect more imagery, or imagery of more homogenous things
