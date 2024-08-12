@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import json
+import cv2
 import shutil
 import random
 import requests
@@ -109,6 +111,27 @@ def generate_and_save_image(base_prompt: str, descriptors: list[str]):
     save_replicate_output(output)
     return output
 
+def generate_flux_images(base_prompt: str, num_images: int = 1000):
+    descriptors = [
+        "close-up shot",
+        "wide angle view",
+        "from the audience perspective",
+        "side view",
+        "with a panel of experts",
+        "holding a microphone",
+        "gesturing with hands",
+        "in front of a large screen",
+        "with audience visible",
+        "under dramatic lighting",
+        "wearing a business suit",
+        "with a confident pose",
+        "mid-speech",
+        "answering questions",
+        "walking across the stage"
+    ]
+    for _ in tqdm(range(num_images), desc="Generating images"):
+        generate_and_save_image(base_prompt, descriptors)
+
 def form_women_presenting_dataset():
     # Create the main dataset directory
     dataset_dir = "women_speaking_data"
@@ -155,28 +178,41 @@ def form_women_presenting_dataset():
     print(f"Test set: {len(real_test) + len(fake_test)} images")
     print(f"Validation set: {len(real_val) + len(fake_val)} images")
 
+def get_resolution_counts():
+    """
+    Gets the count of each resolution of all images in our dataset.
+    """
+    dataset_dir = "women_speaking_data"
+    resolution_counts = {}
+
+    for split in ["train", "test", "validation"]:
+        for label in ["REAL", "FAKE"]:
+            dir_path = os.path.join(dataset_dir, split, label)
+            for img_name in os.listdir(dir_path):
+                img_path = os.path.join(dir_path, img_name)
+                try:
+                    img = cv2.imread(img_path)
+                    if img is not None:
+                        height, width = img.shape[:2]
+                        resolution = f"{width}x{height}"
+                        resolution_counts[resolution] = resolution_counts.get(resolution, 0) + 1
+                    else:
+                        print(f"Failed to read image: {img_path}")
+                except Exception as e:
+                    print(f"Error processing {img_path}: {e}")
+
+    sorted_resolutions = dict(sorted(resolution_counts.items(), key=lambda item: item[1], reverse=True))
+
+    with open('resolutions.json', 'w') as f:
+        json.dump(sorted_resolutions, f, indent=4)
+
+    print(f"Resolution counts saved to resolutions.json")
+    return sorted_resolutions
+
 if __name__ == "__main__":
     # download_images(query="woman presenting on stage", limit=1000, output_directory="google_images")
-
-    base_prompt = "woman presenting on stage"
-    descriptors = [
-        "close-up shot",
-        "wide angle view",
-        "from the audience perspective",
-        "side view",
-        "with a panel of experts",
-        "holding a microphone",
-        "gesturing with hands",
-        "in front of a large screen",
-        "with audience visible",
-        "under dramatic lighting",
-        "wearing a business suit",
-        "with a confident pose",
-        "mid-speech",
-        "answering questions",
-        "walking across the stage"
-    ]
-    # for _ in tqdm(range(1000), desc="Generating images"):
-    #     generate_and_save_image(base_prompt, descriptors)
-
-    form_women_presenting_dataset()
+    # generate_flux_images("woman presenting on stage", num_images=1000)
+    # form_women_presenting_dataset()
+    
+    get_resolution_counts()
+    
