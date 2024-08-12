@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import shutil
+import random
 import requests
 import time
 import urllib.parse
@@ -10,7 +12,6 @@ import replicate
 import os
 import requests
 from tqdm import tqdm
-import random
 import dotenv
 dotenv.load_dotenv('../.env')
 
@@ -108,6 +109,52 @@ def generate_and_save_image(base_prompt: str, descriptors: list[str]):
     save_replicate_output(output)
     return output
 
+def form_women_presenting_dataset():
+    # Create the main dataset directory
+    dataset_dir = "women_speaking_data"
+    os.makedirs(dataset_dir, exist_ok=True)
+
+    # Create subdirectories for train, test, and validation
+    for split in ["train", "test", "validation"]:
+        for label in ["REAL", "FAKE"]:
+            os.makedirs(os.path.join(dataset_dir, split, label), exist_ok=True)
+
+    # Collect all real and fake image paths
+    real_images = [os.path.join("google_images", f) for f in os.listdir("google_images") if f.endswith(('.jpg', '.jpeg', '.png'))]
+    fake_images = [os.path.join("replicate_flux", f) for f in os.listdir("replicate_flux") if f.endswith(('.jpg', '.jpeg', '.png'))]
+
+    # Function to split data without sklearn
+    def custom_split(data, train_ratio=0.8, test_ratio=0.1, val_ratio=0.1):
+        random.shuffle(data)
+        n = len(data)
+        train_end = int(n * train_ratio)
+        test_end = train_end + int(n * test_ratio)
+        return data[:train_end], data[train_end:test_end], data[test_end:]
+
+    # Split the datasets
+    real_train, real_test, real_val = custom_split(real_images)
+    fake_train, fake_test, fake_val = custom_split(fake_images)
+
+    # Function to copy images to their respective directories
+    def copy_images(images, split, label):
+        for img in images:
+            dest = os.path.join(dataset_dir, split, label, os.path.basename(img))
+            shutil.copy(img, dest)
+
+    # Copy images to their respective directories
+    copy_images(real_train, "train", "REAL")
+    copy_images(real_test, "test", "REAL")
+    copy_images(real_val, "validation", "REAL")
+
+    copy_images(fake_train, "train", "FAKE")
+    copy_images(fake_test, "test", "FAKE")
+    copy_images(fake_val, "validation", "FAKE")
+
+    print("Dataset creation completed.")
+    print(f"Train set: {len(real_train) + len(fake_train)} images")
+    print(f"Test set: {len(real_test) + len(fake_test)} images")
+    print(f"Validation set: {len(real_val) + len(fake_val)} images")
+
 if __name__ == "__main__":
     # download_images(query="woman presenting on stage", limit=1000, output_directory="google_images")
 
@@ -131,3 +178,5 @@ if __name__ == "__main__":
     ]
     # for _ in tqdm(range(1000), desc="Generating images"):
     #     generate_and_save_image(base_prompt, descriptors)
+
+    form_women_presenting_dataset()
